@@ -1,2 +1,7 @@
-# Roux_Liu_and_Robinson-Rechavi_2016
-Supplemntary Material for Roux et al. 2016
+Supplementary material for:
+# Selective constraints on coding sequences of nervous system genes as a major determinant of duplicate genes retention in vertebrates
+Julien Roux, Jialin Liu, Marc Robinson-Rechavi
+
+Université de Lausanne, Département d'Ecologie et d'Evolution, Quartier Sorge, 1015 Lausanne, Switzerland.
+
+Swiss Institute of Bioinformatics, Lausanne, Switzerland.

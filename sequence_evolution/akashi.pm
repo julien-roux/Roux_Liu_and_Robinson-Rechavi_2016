@@ -1,5 +1,5 @@
 # Julien Roux
-# This script launches Akashi's test on one pair of mouse-rat 1-to-1 orthologs
+# This script launches Akashi's test (Akashi 1994; Drummond and Wilke 2008) on one pair of mouse-rat 1-to-1 orthologs. The test was implemented following the procedure described at http://drummond.openwetware.org/Akashi's_Test.html
 # This script was developed for Ensembl release 79. I might not work for more recent releases
 
 sub akashi_test {

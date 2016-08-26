@@ -1,5 +1,4 @@
-## Selective constraints on coding sequences of nervous system genes as a major
-## determinant of long-term retention of duplicate genes in vertebrates
+## Selective constraints on coding sequences of nervous system genes are a major determinant of duplicate gene retention in vertebrates
 ## Julien Roux, Jialin Liu and Marc Robinson-Rechavi
 ## August 2016
 

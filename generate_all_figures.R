@@ -396,12 +396,17 @@ for (i in 1:10000){
   subsampled <- c(subsampled, wilcox.test(sample(allBoxes[[3]], size=length(allBoxes[[5]])), sample(allBoxes[[4]], size=length(allBoxes[[6]])))$p.value)
 }
 summary(subsampled)
-hist(subsampled, breaks=100)
+hist(subsampled, breaks=100, main="", xlab="Subsampling p-value")
 ## Compare to non-NS p-value
 summary(subsampled < 0.05)
 summary(subsampled < wilcox.test(allBoxes[[5]], allBoxes[[6]])$p.value)
 abline(v=0.05, col=myPalette[1], lty=2)
 abline(v=wilcox.test(allBoxes[[5]], allBoxes[[6]])$p.value, col=myPalette[1], lty=1)
+
+hist(log10(subsampled), breaks=100, main="", xlab="log10(Subsampling p-value)")
+## Compare to non-NS p-value
+abline(v=log10(0.05), col=myPalette[1], lty=2)
+abline(v=log10(wilcox.test(allBoxes[[5]], allBoxes[[6]])$p.value), col=myPalette[1], lty=1)
 
 
 #####***** Figure 3 *****#####

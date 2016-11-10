@@ -2,7 +2,7 @@
 use strict;
 use Bio::EnsEMBL::Utils::Exception;
 use Bio::EnsEMBL::Registry;
-$|=1;  #no buffering of the output
+$|=1; # no buffering of the output
 
 # Julien Roux and Jialin Liu
 # This script looks for Ensembl gene trees with topology compatible or not with the 3R teleost-specific whole-genome duplication. It was developed for Ensembl release 79. I might not work for more recent releases
@@ -36,7 +36,7 @@ my $limit_left = $limit_node->left_index;
 my $limit_right = $limit_node->right_index;
 
 TREE:
-foreach my $tree (sort {$a->stable_id cmp $b->stable_id} (@children)) { 
+foreach my $tree (sort {$a->stable_id cmp $b->stable_id} (@children)) {
   # Tip: will make the traversal of the tree faster
   $tree->preload();
   print "Tree root:", $tree->root, "\n", $tree, "\n";
@@ -55,7 +55,7 @@ sub select_sub_tree {
   print "Tree root ID: ", $this_tree->node_id, ", level: ", $level, "\n";
 
   # get taxonomical level of the root
-  my $tax_level = $this_tree->taxonomy_level(); 
+  my $tax_level = $this_tree->taxonomy_level();
   print "\tTaxonomy level: $tax_level\n";
 
   if ((defined $tax_level) and ($tax_level ne '')) {
@@ -77,8 +77,8 @@ sub select_sub_tree {
       elsif (($left_tax == $limit_left) and ($right_tax == $limit_right) and ($this_tree->get_tagvalue('node_type') eq 'speciation')) {
         print "\tTest!\n";
         $this_tree->print_tree();
-        test_3R_dup($this_tree);
-        test_3R_sing($this_tree);
+        #test_3R_dup($this_tree);
+        #test_3R_sing($this_tree);
         test_3R_dup_orth($this_tree);
         test_3R_sing_orth($this_tree);
       }
@@ -205,7 +205,7 @@ sub test_3R_sing {
 # test_3R_dup_orth ############################################################
 sub test_3R_dup_orth {
   my ($root) = @_;
-  # We want two zebrafish 3R duplicates (see test_3R_dup), plus a single ortholog in mouse
+  # We want two zebrafish 3R duplicates (see test_3R_dup), plus a single ortholog in mouse / human
 
   # 3R topology: we want neopterygii speciation node and then a clupeocephala duplication node (high confidence) and a spotted gar ortholog
   my %zf_genes;
@@ -235,19 +235,37 @@ sub test_3R_dup_orth {
   if (scalar(keys %zf_genes) eq 2) {
     if ((scalar(@{$zf_genes{'1'}}) eq 1) and (scalar(@{$zf_genes{'2'}}) eq 1)) {
       # check mouse orthologs: should have only 1
-      my @homologies;
+      my @homologies_mouse;
       foreach my $homology (@{$homology_adaptor->fetch_all_by_Member_paired_species(${$zf_genes{'1'}}[0], "Mus_musculus")}) {
         if (($homology->taxonomy_level() eq 'Euteleostomi') and ($homology->description eq 'ortholog_one2many') and ($homology->is_tree_compliant() eq 1)) {
-          push(@homologies, $homology);
+          push(@homologies_mouse, $homology);
         }
       }
-      if (scalar(@homologies eq 1)){
+      if (scalar(@homologies_mouse eq 1)){
         print "\tThis tree was selected (mouse 3R dup ortholog)\n";
-        foreach my $member (@{$homologies[0]->gene_list}) {
+        foreach my $member (@{$homologies_mouse[0]->gene_list}) {
           if ($member->stable_id =~m/ENSMUSG/) {
-            open(OUT, '>>mouse_orthologs_3R_ohnologs.txt') or die "Can't open file";
-            print OUT $member->stable_id, "\t", ${$zf_genes{'1'}}[0]->stable_id, "\t", ${$zf_genes{'2'}}[0]->stable_id, "\t", $root->tree->stable_id, "\n";
-            close OUT;
+            open(OUT1, '>>mouse_orthologs_3R_ohnologs.txt') or die "Can't open file";
+            print OUT1 $member->stable_id, "\t", ${$zf_genes{'1'}}[0]->stable_id, "\t", ${$zf_genes{'2'}}[0]->stable_id, "\t", $root->tree->stable_id, "\n";
+            close OUT1;
+          }
+        }
+      }
+
+      # check human orthologs: should have only 1
+      my @homologies_human;
+      foreach my $homology (@{$homology_adaptor->fetch_all_by_Member_paired_species(${$zf_genes{'1'}}[0], "Homo_sapiens")}) {
+        if (($homology->taxonomy_level() eq 'Euteleostomi') and ($homology->description eq 'ortholog_one2many') and ($homology->is_tree_compliant() eq 1)) {
+          push(@homologies_human, $homology);
+        }
+      }
+      if (scalar(@homologies_human eq 1)){
+        print "\tThis tree was selected (human 3R dup ortholog)\n";
+        foreach my $member (@{$homologies_human[0]->gene_list}) {
+          if ($member->stable_id =~m/ENSG/) {
+            open(OUT2, '>>human_orthologs_3R_ohnologs.txt') or die "Can't open file";
+            print OUT2 $member->stable_id, "\t", ${$zf_genes{'1'}}[0]->stable_id, "\t", ${$zf_genes{'2'}}[0]->stable_id, "\t", $root->tree->stable_id, "\n";
+            close OUT2;
           }
         }
       }
@@ -261,7 +279,7 @@ sub test_3R_sing_orth {
   my ($root) = @_;
   my $zf_gene;
   foreach my $child1 (@{$root->children()}) {
-    # We want to retrieve 3R singletons in danio 
+    # We want to retrieve 3R singletons in zebrafish
     #  - no duplication in the tree after 3R on branches leading to zebrafish (tax levels Otophysa or zebrafish)
     #  - only 1 zebrafish gene
     if (($child1->taxonomy_level() eq 'Clupeocephala') and ($child1->get_tagvalue('node_type') eq 'speciation')) {
@@ -280,23 +298,42 @@ sub test_3R_sing_orth {
         }
       }
 
-      # if there is no 3R duplication, check that there is a single mouse ortholog
+      # if there is no 3R duplication, check that there is a single mouse / human ortholog
       if (($duplication eq 0) and (defined $zf_gene)) {
-        # retrieve the homologies between the zebrafish gene and the mouse genes
-        my @homologies;
+        # retrieve the homologies between the zebrafish gene and mouse genes
+        my @homologies_mouse;
         foreach my $homology (@{$homology_adaptor->fetch_all_by_Member_paired_species($zf_gene, "Mus_musculus")}) {
           print $homology->description, "\n";
           if (($homology->taxonomy_level() eq 'Euteleostomi') and ($homology->description eq 'ortholog_one2one') and ($homology->is_tree_compliant() eq 1)) {
-            push(@homologies, $homology);
+            push(@homologies_mouse, $homology);
           }
         }
-        if (scalar(@homologies eq 1)) {
+        if (scalar(@homologies_mouse eq 1)) {
           print "\tThis tree was selected (mouse 3R sing ortholog)\n";
-          foreach my $member (@{$homologies[0]->gene_list}) {
+          foreach my $member (@{$homologies_mouse[0]->gene_list}) {
             if ($member->stable_id =~m/ENSMUSG/) {
-              open(OUT, '>>mouse_orthologs_3R_singletons.txt') or die "Can't open file";
-              print OUT $member->stable_id, "\t", $zf_gene->stable_id, "\t", $root->tree->stable_id, "\n";
-              close OUT;
+              open(OUT1, '>>mouse_orthologs_3R_singletons.txt') or die "Can't open file";
+              print OUT1 $member->stable_id, "\t", $zf_gene->stable_id, "\t", $root->tree->stable_id, "\n";
+              close OUT1;
+            }
+          }
+        }
+
+        # retrieve the homologies between the zebrafish gene and human genes
+        my @homologies_human;
+        foreach my $homology (@{$homology_adaptor->fetch_all_by_Member_paired_species($zf_gene, "Homo_sapiens")}) {
+          print $homology->description, "\n";
+          if (($homology->taxonomy_level() eq 'Euteleostomi') and ($homology->description eq 'ortholog_one2one') and ($homology->is_tree_compliant() eq 1)) {
+            push(@homologies_human, $homology);
+          }
+        }
+        if (scalar(@homologies_human eq 1)) {
+          print "\tThis tree was selected (human 3R sing ortholog)\n";
+          foreach my $member (@{$homologies_human[0]->gene_list}) {
+            if ($member->stable_id =~m/ENSG/) {
+              open(OUT2, '>>human_orthologs_3R_singletons.txt') or die "Can't open file";
+              print OUT2 $member->stable_id, "\t", $zf_gene->stable_id, "\t", $root->tree->stable_id, "\n";
+              close OUT2;
             }
           }
         }

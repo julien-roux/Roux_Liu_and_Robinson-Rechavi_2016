@@ -77,8 +77,8 @@ sub select_sub_tree {
       elsif (($left_tax == $limit_left) and ($right_tax == $limit_right) and ($this_tree->get_tagvalue('node_type') eq 'speciation')) {
         print "\tTest!\n";
         $this_tree->print_tree();
-        #test_3R_dup($this_tree);
-        #test_3R_sing($this_tree);
+        test_3R_dup($this_tree);
+        test_3R_sing($this_tree);
         test_3R_dup_orth($this_tree);
         test_3R_sing_orth($this_tree);
       }

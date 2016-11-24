@@ -16,7 +16,6 @@ sing3R_orth <- read.table("gene_lists/mouse_orthologs_3R_singletons.txt", sep="\
 names(dup3R_orth)[1] <- "Ensembl.Gene.ID"
 names(sing3R_orth)[1] <- "Ensembl.Gene.ID"
 
-
 ## mouse small scale duplicates
 SSD <- read.table("gene_lists/mouse_SSD.txt", sep="\t", h=T)
 names(SSD) <- "Ensembl.Gene.ID"
@@ -449,7 +448,22 @@ abline(v=unique(GSE10246.ratios.WGD.merged[,c(3,6)])[,2], col="grey", lty=3)
 points(GSE10246.ratios.WGD.merged$order, GSE10246.ratios.WGD.merged$"GSE10246.ratios.WGD", col=color, pch=16, cex=1.5)
 text(unique(GSE10246.ratios.WGD.merged[,c(3,6)])[,2], 0.09, srt = 45, adj = 1,labels = unique(GSE10246.ratios.WGD.merged[,c(3,6)])[,1], xpd = TRUE)
 
+
 ## Fig S2B
+## GTEx human data
+GTEx.ratio.WGD <- read.table("expression_RNA-seq_Bgee/GTEx_SRP012682_matrix_annotation+WGD_ratio.tsv", h=T, sep="\t", comment.char="", quote = "")
+GTEx.ratio.WGD$order <- as.numeric(reorder(factor(GTEx.ratio.WGD$uberonId), GTEx.ratio.WGD$mean.ratio))
+
+## Here there are a lot of points so we plot as a boxplot
+par(mar=c(15, 5, 2, 1) + 0.1)
+color <- ifelse(unique(GTEx.ratio.WGD$uberonId) %in% NSbroad, myPalette[3], myPalette[4])
+plot(GTEx.ratio.WGD$order, GTEx.ratio.WGD$ratio.WGD, ylab="Proportion of duplicate orthologs", xlab="", xaxt="n", type="n", ylim=c(0.1,0.135))
+abline(v=unique(GTEx.ratio.WGD$order), col="grey", lty=3)
+boxplot(GTEx.ratio.WGD$ratio.WGD ~ GTEx.ratio.WGD$order, ylab="", xlab="", col=color, pch=16, cex=0.5, names=NA, add=T)
+text(unique(GTEx.ratio.WGD$order), 0.097, srt = 45, adj = 1,labels = unique(GTEx.ratio.WGD$uberonName), xpd = TRUE)
+
+
+## Fig S2C
 ## reconciliate calls across probesets mapped to same gene (a bit long)
 GSE16496.calls.aggregated <- aggregate(GSE16496.calls[,-c(1,2)], list(GSE16496.calls$Gene_ID), function(x){ return(paste(unique(x), collapse="/")) })
 names(GSE16496.calls.aggregated)[1] <- "Ensembl.Gene.ID"

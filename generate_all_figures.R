@@ -387,12 +387,14 @@ mtext(c("All", "Nervous system", "Non-nervous system"), side=1, line=3, at=c(1.5
 abline(v=3, lty=2, col="grey")
 text(c(1,2,4,5,7,8), -4.8, labels=paste0("n=", unlist(lapply(allBoxes, length))))
 
-## Address potential power issues, because there are more NS genes than non-NS genes
+#####***** Figure S15 *****#####
+## Address potential power issues (there are more NS genes than non-NS genes)
 ## http://biorxiv.org/content/early/2016/09/01/072959#comment-2890987439
-## -> Subsampling of NS genes to number of non-NS genes (10,000 times) and record wilcoxon test p-values
-subsampled <- vector()
+## -> Subsampling of NS genes to number of non-NS genes 10,000 times and record wilcoxon test p-values
+subsampled <- rep(NA, times=10000)
 for (i in 1:10000){
-  subsampled <- c(subsampled, wilcox.test(sample(allBoxes[[3]], size=length(allBoxes[[5]])), sample(allBoxes[[4]], size=length(allBoxes[[6]])))$p.value)
+  ## print(i)
+  subsampled[i] <- wilcox.test(sample(allBoxes[[3]], size=length(allBoxes[[5]])), sample(allBoxes[[4]], size=length(allBoxes[[6]])))$p.value
 }
 summary(subsampled)
 hist(subsampled, breaks=100, main="", xlab="Subsampling p-value")
@@ -401,11 +403,6 @@ summary(subsampled < 0.05)
 summary(subsampled < wilcox.test(allBoxes[[5]], allBoxes[[6]])$p.value)
 abline(v=0.05, col=myPalette[1], lty=2)
 abline(v=wilcox.test(allBoxes[[5]], allBoxes[[6]])$p.value, col=myPalette[1], lty=1)
-
-hist(log10(subsampled), breaks=100, main="", xlab="log10(Subsampling p-value)")
-## Compare to non-NS p-value
-abline(v=log10(0.05), col=myPalette[1], lty=2)
-abline(v=log10(wilcox.test(allBoxes[[5]], allBoxes[[6]])$p.value), col=myPalette[1], lty=1)
 
 
 #####***** Figure 3 *****#####
@@ -679,7 +676,7 @@ for(n in c(1:6)) {
   numberNoNS <- cbind(numberNoNS, (uniprotDupOrthNoNS[[n]] + uniprotSingOrthNoNS[[n]]))
 }
 ## barplot
-par(mar=c(9,5,2,2))
+par(mar=c(12,5,2,2))
 mp <- barplot(c(propNS,propNoNS), las=2, main="", ylab="Proportion of duplicate orthologs", ylim=c(0,0.3), col=rep(c(myPalette[3], myPalette[4]), each=6))
 xlabels <- c("Hetero-multimer genes", "Hetero-dimer genes","Uncharacterized complexes genes","Homo-multimer genes","Monomer genes","Non-annotated genes")
 text(x=mp, y=-0.01, srt=45, cex.lab=0.8, adj=1, labels=rep(xlabels, 2), xpd=TRUE)
@@ -853,7 +850,7 @@ for(n in c(1:6)) {
   numberNoNS <- cbind(numberNoNS, uniprotNoNS[[n]])
 }
 ## barplot
-par(mar=c(9,5,2,2))
+par(mar=c(12,5,2,2))
 mp <- barplot(c(propNS,propNoNS), las=2, main="", ylab="Proportion of small scale duplicates", ylim=c(0,0.1), col=rep(c(myPalette[3], myPalette[4]), each=6))
 xlabels <- c("Hetero-multimer genes", "Hetero-dimer genes","Uncharacterized complexes genes","Homo-multimer genes","Monomer genes","Non-annotated genes")
 text(x=mp, y=-0.005, srt=45, cex.lab=0.8, adj=1, labels=rep(xlabels, 2), xpd=TRUE)
@@ -874,8 +871,8 @@ fdr <- data.frame(p.adjust(pValue[,2], method="BH"))
 qValue <- qvalue(pValue[,2])$qvalues
 
 
-#####***** Figure S15 *****#####
-## Fig S15A
+#####***** Figure S16 *****#####
+## Fig S16A
 ## retrieve duplicates and singletons from each categories
 corumDupOrth <- lapply(corum, function(x) x[x %in% dup3R_orth[,1]])
 corumSingOrth <- lapply(corum, function(x) x[x %in% sing3R_orth[,1]])
@@ -903,7 +900,8 @@ text(x=mp, y=-0.01, srt=45, cex.lab=0.8, adj=1, labels=rep(xlabels, 2), xpd=TRUE
 text(x=mp, y=0.01, cex=0.8, labels=paste0("n=", c(numberNS, numberNoNS)))
 text(x=c((mp[1]+mp[3])/2, (mp[4]+mp[6])/2), y=0.29, cex=1, labels=c("Nervous system genes", "Non-nervous system genes"))
 
-## Fig S15B
+
+## Fig S16B
 ## retrieve SSD 
 corumSSD <- lapply(corum, function(x) x[x %in% SSD[,1]])
 corumSSDNS <- lapply(corumSSD, function(x) length(x[x %in% allNS[,1]]))
@@ -930,8 +928,8 @@ text(x=mp, y=0.001, cex=0.8, labels=paste0("n=", c(numberNS, numberNoNS)))
 text(x=c((mp[1]+mp[3])/2, (mp[4]+mp[6])/2), y=0.038, cex=1, labels=c("Nervous system genes", "Non-nervous system genes"))
 
 
-#####***** Figure S16 *****#####
-## Fig S16A
+#####***** Figure S17 *****#####
+## Fig S17A
 membrane <- read.table("GO/mouse_membrane", sep="\t",h=T)
 names(membrane)[1] <- "UniProt.Gene.Name"
 membrane <- merge(membrane, ensemblID_uniprotID, by="UniProt.Gene.Name")$Ensembl.Gene.ID
@@ -960,14 +958,16 @@ for(n in c(1:length(membrane))) {
 ## barplot
 par(mar=c(9,5,2,2))
 mp <- barplot(c(propNS, propNoNS), las=2, main="", ylab="Proportion of duplicate orthologs", ylim=c(0,0.3), col=rep(c(myPalette[3], myPalette[4]), each=2))
-xlabels <- c("Membrane genes", "Non-Membrane genes")
+xlabels <- c("Membrane genes", "Non-membrane genes")
 text(x=mp, y=-0.01, srt=45, cex.lab=0.8, adj=1, labels=rep(xlabels, 2), xpd=TRUE)
 text(x=mp, y=0.01, cex=0.8, labels=paste0("n=", c(numberNS, numberNoNS)))
 text(x=c((mp[1]+mp[2])/2, (mp[3]+mp[4])/2), y=0.29, cex=1, labels=c("Nervous system genes", "Non-nervous system genes"))
 
-## Fig S16B
+## Fig S17B
 allMembrane <- data.frame(membrane[[1]])
 names(allMembrane) <- "Ensembl.Gene.ID"
 noMembrane <- data.frame(membrane[[2]])
 names(noMembrane) <- "Ensembl.Gene.ID"
 binAnalysis2Groups(dnds, allMembrane, noMembrane, "dN.log10", xlimits=c(-2.8, -0.7), ylimits=c(0, 0.6), colors=c(myPalette[9], myPalette[1], "black"), legends=c("Membrane genes","All genes","Non-membrane genes"))
+
+
